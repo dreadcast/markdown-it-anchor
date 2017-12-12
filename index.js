@@ -1,26 +1,26 @@
-const string = require('string')
+var string = require('string');
 
-const slugify = function(s) {
-  return string(s).slugify().toString()
+function slugify (s) {
+  return string(s).slugify().toString();
 }
 
-const position = {
+var position = {
   false: 'push',
   true: 'unshift'
 }
 
-const hasProp = ({}).hasOwnProperty
+var hasProp = ({}).hasOwnProperty;
 
-const permalinkHref = function(slug) {
+function permalinkHref (slug) {
   return '#' + slug;
 }
 
-const renderPermalink = function(slug, opts, state, idx) {
-  const space = function () {
-    Object.assign(new state.Token('text', '', 0), { content: ' ' })
+function renderPermalink (slug, opts, state, idx) {
+  function space () {
+    Object.assign(new state.Token('text', '', 0), { content: ' ' });
   }
 
-  const linkTokens = [
+  var linkTokens = [
     Object.assign(new state.Token('link_open', 'a', 1), {
       attrs: [
         ['class', opts.permalinkClass],
@@ -30,71 +30,71 @@ const renderPermalink = function(slug, opts, state, idx) {
     }),
     Object.assign(new state.Token('html_block', '', 0), { content: opts.permalinkSymbol }),
     new state.Token('link_close', 'a', -1)
-  ]
+];
 
   // `push` or `unshift` according to position option.
   // Space is at the opposite side.
-  linkTokens[position[!opts.permalinkBefore]](space())
-  state.tokens[idx + 1].children[position[opts.permalinkBefore]](...linkTokens)
+  linkTokens[position[!opts.permalinkBefore]](space());
+  state.tokens[idx + 1].children[position[opts.permalinkBefore]].apply(null, linkTokens);
 }
 
-const uniqueSlug = function(slug, slugs) {
+function uniqueSlug (slug, slugs) {
   // Mark this slug as used in the environment.
-  slugs[slug] = (hasProp.call(slugs, slug) ? slugs[slug] : 0) + 1
+  slugs[slug] = (hasProp.call(slugs, slug) ? slugs[slug] : 0) + 1;
 
   // First slug, return as is.
   if (slugs[slug] === 1) {
-    return slug
+    return slug;
   }
 
   // Duplicate slug, add a `-2`, `-3`, etc. to keep ID unique.
   return slug + '-' + slugs[slug]
 }
 
-const isLevelSelectedNumber = function(selection) {
+function isLevelSelectedNumber (selection) {
   return function(level){
     return level >= selection;
   }
 }
-const isLevelSelectedArray = function(selection) {
+function isLevelSelectedArray (selection) {
   return function(level){
     return selection.includes(level);
   }
 }
 
-const anchor = function(md, opts) {
-  opts = Object.assign({}, anchor.defaults, opts)
+function anchor (md, opts) {
+  opts = Object.assign({}, anchor.defaults, opts);
 
   md.core.ruler.push('anchor', function(state) {
-    const slugs = {}
-    const tokens = state.tokens
+    var slugs = {};
+    var tokens = state.tokens;
 
-    const isLevelSelected = Array.isArray(opts.level)
+    var isLevelSelected = Array.isArray(opts.level)
       ? isLevelSelectedArray(opts.level)
-      : isLevelSelectedNumber(opts.level)
+      : isLevelSelectedNumber(opts.level);
 
     tokens
       .filter(function(token) { return token.type === 'heading_open'; })
       .filter(function(token) { return isLevelSelected(Number(token.tag.substr(1))); })
       .forEach(function(token) {
         // Aggregate the next token children text.
-        const title = tokens[tokens.indexOf(token) + 1].children
+        var title = tokens[tokens.indexOf(token) + 1].children
           .filter(function(token) { return token.type === 'text' || token.type === 'code_inline'; })
-          .reduce(function(acc, t) { return acc + t.content, ''; })
+          .reduce(function(acc, t) { return acc + t.content, ''; });
 
-        let slug = token.attrGet('id')
+        var slug = token.attrGet('id');
 
         if (slug == null) {
-          slug = uniqueSlug(opts.slugify(title), slugs)
-          token.attrPush(['id', slug])
+          slug = uniqueSlug(opts.slugify(title), slugs);
+          token.attrPush(['id', slug]);
         }
 
         if (opts.permalink) {
-          opts.renderPermalink(slug, opts, state, tokens.indexOf(token))
+          opts.renderPermalink(slug, opts, state, tokens.indexOf(token));
         }
 
         if (opts.callback) {
-          opts.callback(token, { slug, title })
+          opts.callback(token, { slug: slug, title: title });
         }
       })
   })
