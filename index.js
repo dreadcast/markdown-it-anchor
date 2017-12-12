@@ -1,7 +1,8 @@
 const string = require('string')
 
-const slugify = s =>
-  string(s).slugify().toString()
+const slugify = function(s) {
+  return string(s).slugify().toString()
+}
 
 const position = {
   false: 'push',
@@ -10,11 +11,14 @@ const position = {
 
 const hasProp = ({}).hasOwnProperty
 
-const permalinkHref = slug => `#${slug}`
+const permalinkHref = function(slug) {
+  return '#' + slug;
+}
 
-const renderPermalink = (slug, opts, state, idx) => {
-  const space = () =>
+const renderPermalink = function(slug, opts, state, idx) {
+  const space = function () {
     Object.assign(new state.Token('text', '', 0), { content: ' ' })
+  }
 
   const linkTokens = [
     Object.assign(new state.Token('link_open', 'a', 1), {
@@ -34,7 +38,7 @@ const renderPermalink = (slug, opts, state, idx) => {
   state.tokens[idx + 1].children[position[opts.permalinkBefore]](...linkTokens)
 }
 
-const uniqueSlug = (slug, slugs) => {
+const uniqueSlug = function(slug, slugs) {
   // Mark this slug as used in the environment.
   slugs[slug] = (hasProp.call(slugs, slug) ? slugs[slug] : 0) + 1
 
@@ -47,13 +51,21 @@ const uniqueSlug = (slug, slugs) => {
   return slug + '-' + slugs[slug]
 }
 
-const isLevelSelectedNumber = selection => level => level >= selection
-const isLevelSelectedArray = selection => level => selection.includes(level)
+const isLevelSelectedNumber = function(selection) {
+  return function(level){
+    return level >= selection;
+  }
+}
+const isLevelSelectedArray = function(selection) {
+  return function(level){
+    return selection.includes(level);
+  }
+}
 
-const anchor = (md, opts) => {
+const anchor = function(md, opts) {
   opts = Object.assign({}, anchor.defaults, opts)
 
-  md.core.ruler.push('anchor', state => {
+  md.core.ruler.push('anchor', function(state) {
     const slugs = {}
     const tokens = state.tokens
 
@@ -62,13 +74,13 @@ const anchor = (md, opts) => {
       : isLevelSelectedNumber(opts.level)
 
     tokens
-      .filter(token => token.type === 'heading_open')
-      .filter(token => isLevelSelected(Number(token.tag.substr(1))))
-      .forEach(token => {
+      .filter(function(token) { return token.type === 'heading_open'; })
+      .filter(function(token) { return isLevelSelected(Number(token.tag.substr(1))); })
+      .forEach(function(token) {
         // Aggregate the next token children text.
         const title = tokens[tokens.indexOf(token) + 1].children
-          .filter(token => token.type === 'text' || token.type === 'code_inline')
-          .reduce((acc, t) => acc + t.content, '')
+          .filter(function(token) { return token.type === 'text' || token.type === 'code_inline'; })
+          .reduce(function(acc, t) { return acc + t.content, ''; })
 
         let slug = token.attrGet('id')
 
@@ -90,13 +102,13 @@ const anchor = (md, opts) => {
 
 anchor.defaults = {
   level: 1,
-  slugify,
+  slugify: slugify,
   permalink: false,
-  renderPermalink,
+  renderPermalink: renderPermalink,
   permalinkClass: 'header-anchor',
   permalinkSymbol: '¶',
   permalinkBefore: false,
-  permalinkHref
+  permalinkHref: permalinkHref
 }
 
 module.exports = anchor
